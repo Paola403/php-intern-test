@@ -2,63 +2,76 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
+use App\Models\ProductType;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $products = Product::with('type')->get();
+
+        return view('products.index', compact('products'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        $types = ProductType::all();
+
+        return view('products.create', compact('types'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'description'     => 'required|string|max:255',
+            'quantity'        => 'required|integer|min:0',
+            'value'           => 'required|numeric|min:0',
+            'product_type_id' => 'required|exists:product_types,id',
+        ]);
+
+
+        Product::create($request->all());
+
+        return redirect()->route('products.index')->with('success', 'Produto cadastrado com sucesso!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        $product = Product::with('type')->findOrFail($id);
+
+        return view('products.show', compact('product'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+        $types = ProductType::all();
+
+        return view('products.edit', compact('product', 'types'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'description'     => 'required|string|max:255',
+            'quantity'        => 'required|integer|min:0',
+            'value'           => 'required|numeric|min:0',
+            'product_type_id' => 'required|exists:product_types,id',
+        ]);
+
+        $product = Product::findOrFail($id);
+        $product->update($request->all());
+
+        return redirect()->route('products.index')->with('success', 'Produto atualizado com sucesso!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return redirect()->route('products.index')->with('success', 'Produto excluído com sucesso!');
     }
 }
